@@ -1,0 +1,918 @@
+
+{% extends "base.html" %}
+
+{% block title %}Database Documentation{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="mb-1">Database Documentation</h2>
+            <p class="text-muted mb-0">
+                Overview of the discovered database structure.
+            </p>
+        </div>
+
+        <a href="{{ url_for('documentation.index') }}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Documentation
+        </a>
+
+    </div>
+
+
+    {% if summary %}
+
+        <!-- Database overview -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-database me-2"></i>
+                    Database Overview
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row align-items-center">
+
+                    <div class="col-md-6 mb-3">
+
+                        <small class="text-muted d-block">
+                            Database Name
+                        </small>
+
+                        <h5 class="mb-0">
+                            {{ summary.database }}
+                            <span class="badge bg-success ms-2">
+                                Scan completed
+                            </span>
+                        </h5>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <small class="text-muted d-block">
+                            Connection ID
+                        </small>
+
+                        <h5 class="mb-0">
+                            {{ summary.connection_id }}
+                        </h5>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3 text-md-end">
+
+                        <small class="text-muted d-block">
+                            Database State
+                        </small>
+
+                        <span class="badge bg-success">
+                            {{ structure.metadata.state | default('Unknown') }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Summary cards -->
+        <div class="row g-3 mb-4">
+
+            {% set summary_cards = [
+                ('Schemas', summary.schema_count, 'bi-diagram-3', 'primary'),
+                ('Tables', summary.table_count, 'bi-table', 'success'),
+                ('Views', summary.view_count, 'bi-eye', 'info'),
+                ('Stored Procedures', summary.stored_procedure_count, 'bi-file-code', 'warning'),
+                ('Functions', summary.function_count, 'bi-gear', 'secondary'),
+                ('Triggers', summary.trigger_count, 'bi-lightning', 'danger'),
+                ('Relationships', summary.relationship_count, 'bi-share', 'primary'),
+                ('Sequences', summary.sequence_count, 'bi-list-ol', 'info'),
+                ('Synonyms', summary.synonym_count, 'bi-link-45deg', 'secondary')
+            ] %}
+
+            {% for label, count, icon, colour in summary_cards %}
+
+                <div class="col-xl-3 col-md-4 col-sm-6">
+
+                    <div class="card shadow-sm h-100">
+
+                        <div class="card-body">
+
+                            <div class="d-flex justify-content-between align-items-center">
+
+                                <div>
+                                    <small class="text-muted">
+                                        {{ label }}
+                                    </small>
+
+                                    <h2 class="mb-0">
+                                        {{ count }}
+                                    </h2>
+                                </div>
+
+                                <i class="bi {{ icon }} fs-1 text-{{ colour }}"></i>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- Database properties -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Database Properties
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">Collation</small>
+                        <strong>
+                            {{ structure.metadata.collation | default('Not available') }}
+                        </strong>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">Compatibility Level</small>
+                        <strong>
+                            {{ structure.metadata.compatibility_level | default('Not available') }}
+                        </strong>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">Recovery Model</small>
+                        <strong>
+                            {{ structure.metadata.recovery_model | default('Not available') }}
+                        </strong>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">User Access</small>
+                        <strong>
+                            {{ structure.metadata.user_access | default('Not available') }}
+                        </strong>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <small class="text-muted d-block">Created</small>
+                        <strong>
+                            {{ structure.metadata.create_at | default('Not available') }}
+                        </strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Discovered schemas and tables -->
+        <div class="card shadow-sm mb-4">
+        
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-folder2-open me-2"></i>
+                    Schemas and Tables
+                </h5>
+            </div>
+        
+            <div class="card-body">
+            
+                {% if tables_by_schema %}
+            
+                    <div class="row">
+                    
+                        {% for schema_name, tables in tables_by_schema.items() %}
+                    
+                            <div class="col-lg-6 col-xl-4 mb-4">
+                            
+                                <div class="border rounded p-3 h-100">
+                                
+                                    <!-- Schema heading -->
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                    
+                                        <strong class="text-primary">
+                                            <i class="bi bi-folder me-2"></i>
+                                            {{ schema_name }}
+                                        </strong>
+                                    
+                                        <span class="badge bg-secondary">
+                                            {{ tables|length }} tables
+                                        </span>
+                                    
+                                    </div>
+                                
+                                    <!-- Schema diagram -->
+                                    <div class="mb-3">
+                                    
+                                        <a href="{{ url_for(
+                                            'documentation.view_diagram',
+                                            connection_id=connection_id,
+                                            schema=schema_name
+                                        ) }}" class="btn btn-outline-primary btn-sm">
+                                        
+                                            <i class="fa-solid fa-diagram-project me-1"></i>
+                                            View Schema Diagram
+                                        
+                                        </a>
+                                    
+                                    </div>
+                                
+                                    <!-- Tables -->
+                                    <div class="list-group list-group-flush">
+                                    
+                                        {% for table in tables %}
+                                    
+                                            <div class="list-group-item px-0 d-flex justify-content-between align-items-center">
+                                            
+                                                <div class="me-2">
+                                                
+                                                    <i class="bi bi-table text-muted me-2"></i>
+                                                
+                                                    <span class="fw-medium">
+                                                        {{ table.name }}
+                                                    </span>
+                                                
+                                                </div>
+                                            
+                                                <a href="{{ url_for(
+                                                    'documentation.view_table',
+                                                    connection_id=connection_id,
+                                                    table_name=table.key
+                                                ) }}"
+                                                   class="btn btn-outline-secondary btn-sm flex-shrink-0">
+                                                
+                                                    <i class="bi bi-eye me-1"></i>
+                                                    View Table
+                                                
+                                                </a>
+                                            
+                                            </div>
+                                        
+                                        {% endfor %}
+                                        
+                                    </div>
+                                
+                                </div>
+                            
+                            </div>
+                        
+                        {% endfor %}
+                        
+                    </div>
+                
+                {% else %}
+                
+                    <p class="text-muted mb-0">
+                        No tables were discovered.
+                    </p>
+                
+                {% endif %}
+                
+            </div>
+        
+        </div>
+
+
+        <!-- Relationships -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-share me-2"></i>
+                    Relationships
+                    <span class="badge bg-secondary ms-2">
+                        {{ structure.relationships|length }}
+                    </span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                {% if structure.relationships %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-sm table-hover">
+
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Source Table</th>
+                                    <th>Source Columns</th>
+                                    <th>Referenced Table</th>
+                                    <th>Referenced Columns</th>
+                                    <th>Foreign Key</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for relationship in structure.relationships %}
+
+                                    <tr>
+
+                                        <td>
+                                            {{ relationship.source }}
+                                        </td>
+
+                                        <td>
+                                            {{ relationship.columns | join(', ') }}
+                                        </td>
+
+                                        <td>
+                                            {{ relationship.target }}
+                                        </td>
+
+                                        <td>
+                                            {{ relationship.referenced_columns | join(', ') }}
+                                        </td>
+
+                                        <td>
+                                            {{ relationship.foreign_key }}
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">
+                        No relationships discovered.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Views -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-eye me-2"></i>
+                    Views
+                    <span class="badge bg-secondary ms-2">
+                        {{ structure.views|length }}
+                    </span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                {% if structure.views %}
+
+                    <div class="accordion">
+
+                        {% for view_key, view in structure.views.items() %}
+
+                            <div class="accordion-item">
+
+                                <h2 class="accordion-header">
+
+                                    <button class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#view-{{ loop.index }}">
+
+                                        {{ view.schema }}.{{ view.name }}
+
+                                    </button>
+
+                                </h2>
+
+                                <div id="view-{{ loop.index }}"
+                                     class="accordion-collapse collapse">
+
+                                    <div class="accordion-body">
+
+                                        {% if view.columns %}
+
+                                            <h6>Columns</h6>
+
+                                            <ul class="small">
+                                                {% for column in view.columns %}
+                                                    <li>
+                                                        {{ column.name }} - {{ column.type }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+
+                                        {% endif %}
+
+                                        {% if view.dependencies %}
+
+                                            <h6>Dependencies</h6>
+
+                                            <ul class="small">
+                                                {% for dependency in view.dependencies %}
+                                                    <li>
+                                                        {{ dependency.schema }}.{{ dependency.object }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+
+                                        {% endif %}
+
+                                        <h6>SQL Definition</h6>
+
+                                        <pre class="bg-light border rounded p-3 small"><code>{{ view.definition | default('Definition unavailable') }}</code></pre>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">No views discovered.</p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Stored procedures -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-file-code me-2"></i>
+                    Stored Procedures
+                    <span class="badge bg-secondary ms-2">
+                        {{ structure.stored_procedures|length }}
+                    </span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                {% if structure.stored_procedures %}
+
+                    <div class="accordion">
+
+                        {% for module_key, module in structure.stored_procedures.items() %}
+
+                            {% set module_id = 'procedure-' ~ loop.index %}
+
+                            <div class="accordion-item">
+
+                                <h2 class="accordion-header">
+
+                                    <button class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#{{ module_id }}">
+
+                                        {{ module.schema }}.{{ module.name }}
+
+                                    </button>
+
+                                </h2>
+
+                                <div id="{{ module_id }}"
+                                     class="accordion-collapse collapse">
+
+                                    <div class="accordion-body">
+
+                                        {% if module.parameters %}
+
+                                            <h6>Parameters</h6>
+
+                                            <div class="table-responsive">
+
+                                                <table class="table table-sm table-bordered">
+
+                                                    <thead class="table-light">
+                                                        <tr>
+                                                            <th>Name</th>
+                                                            <th>Type</th>
+                                                            <th>Output</th>
+                                                            <th>Default</th>
+                                                        </tr>
+                                                    </thead>
+
+                                                    <tbody>
+
+                                                        {% for parameter in module.parameters %}
+
+                                                            <tr>
+                                                                <td>{{ parameter.name }}</td>
+                                                                <td>{{ parameter.type }}</td>
+                                                                <td>{{ 'Yes' if parameter.output else 'No' }}</td>
+                                                                <td>{{ 'Yes' if parameter.has_default_value else 'No' }}</td>
+                                                            </tr>
+
+                                                        {% endfor %}
+
+                                                    </tbody>
+
+                                                </table>
+
+                                            </div>
+
+                                        {% endif %}
+
+                                        {% if module.dependencies %}
+
+                                            <h6>Dependencies</h6>
+
+                                            <ul class="small">
+
+                                                {% for dependency in module.dependencies %}
+
+                                                    <li>
+                                                        {{ dependency.schema }}.{{ dependency.object }}
+                                                        ({{ dependency.object_type }})
+                                                    </li>
+
+                                                {% endfor %}
+
+                                            </ul>
+
+                                        {% endif %}
+
+                                        <h6>SQL Definition</h6>
+
+                                        <pre class="bg-light border rounded p-3 small"><code>{{ module.definition | default(module.defintion | default('Definition unavailable')) }}</code></pre>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">
+                        No stored procedures discovered.
+                    </p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Functions -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-gear me-2"></i>
+                    Functions
+                    <span class="badge bg-secondary ms-2">
+                        {{ structure.functions|length }}
+                    </span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                {% if structure.functions %}
+
+                    <div class="accordion">
+
+                        {% for module_key, module in structure.functions.items() %}
+
+                            {% set module_id = 'function-' ~ loop.index %}
+
+                            <div class="accordion-item">
+
+                                <h2 class="accordion-header">
+
+                                    <button class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#{{ module_id }}">
+
+                                        {{ module.schema }}.{{ module.name }}
+
+                                    </button>
+
+                                </h2>
+
+                                <div id="{{ module_id }}"
+                                     class="accordion-collapse collapse">
+
+                                    <div class="accordion-body">
+
+                                        {% if module.parameters %}
+
+                                            <h6>Parameters</h6>
+
+                                            <ul class="small">
+                                                {% for parameter in module.parameters %}
+                                                    <li>
+                                                        {{ parameter.name }} - {{ parameter.type }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+
+                                        {% endif %}
+
+                                        {% if module.dependencies %}
+
+                                            <h6>Dependencies</h6>
+
+                                            <ul class="small">
+                                                {% for dependency in module.dependencies %}
+                                                    <li>
+                                                        {{ dependency.schema }}.{{ dependency.object }}
+                                                    </li>
+                                                {% endfor %}
+                                            </ul>
+
+                                        {% endif %}
+
+                                        <h6>SQL Definition</h6>
+
+                                        <pre class="bg-light border rounded p-3 small"><code>{{ module.definition | default(module.defintion | default('Definition unavailable')) }}</code></pre>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">No functions discovered.</p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Triggers -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-lightning me-2"></i>
+                    Triggers
+                    <span class="badge bg-secondary ms-2">
+                        {{ structure.triggers|length }}
+                    </span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                {% if structure.triggers %}
+
+                    <div class="accordion">
+
+                        {% for trigger_key, trigger in structure.triggers.items() %}
+
+                            {% set trigger_id = 'trigger-' ~ loop.index %}
+
+                            <div class="accordion-item">
+
+                                <h2 class="accordion-header">
+
+                                    <button class="accordion-button collapsed"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#{{ trigger_id }}">
+
+                                        {{ trigger.schema }}.{{ trigger.name }}
+
+                                    </button>
+
+                                </h2>
+
+                                <div id="{{ trigger_id }}"
+                                     class="accordion-collapse collapse">
+
+                                    <div class="accordion-body">
+
+                                        <h6>SQL Definition</h6>
+
+                                        <pre class="bg-light border rounded p-3 small"><code>{{ trigger.definition | default(trigger.defintion | default('Definition unavailable')) }}</code></pre>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">No triggers discovered.</p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+
+        <!-- Sequences -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-list-ol me-2"></i>
+                    Sequences
+                    <span class="badge bg-secondary ms-2">
+                        {{ structure.sequences|length }}
+                    </span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                {% if structure.sequences %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-sm table-hover">
+
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Schema</th>
+                                    <th>Name</th>
+                                    <th>Data Type</th>
+                                    <th>Start Value</th>
+                                    <th>Increment</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for sequence_key, sequence in structure.sequences.items() %}
+
+                                    <tr>
+                                        <td>{{ sequence.schema }}</td>
+                                        <td>{{ sequence.name }}</td>
+                                        <td>{{ sequence.data_type | default('Unknown') }}</td>
+                                        <td>{{ sequence.start_value | default('Unknown') }}</td>
+                                        <td>{{ sequence.increment | default('Unknown') }}</td>
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">No sequences discovered.</p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+        <!-- Synonyms -->
+        <div class="card shadow-sm mb-4">
+
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-link-45deg me-2"></i>
+                    Synonyms
+                    <span class="badge bg-secondary ms-2">
+                        {{ structure.synonyms|length }}
+                    </span>
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                {% if structure.synonyms %}
+
+                    <div class="table-responsive">
+
+                        <table class="table table-sm table-hover">
+
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Schema</th>
+                                    <th>Name</th>
+                                    <th>Base Object</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {% for synonym_key, synonym in structure.synonyms.items() %}
+
+                                    <tr>
+                                        <td>{{ synonym.schema }}</td>
+                                        <td>{{ synonym.name }}</td>
+                                        <td>{{ synonym.base_object_name }}</td>
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <p class="text-muted mb-0">No synonyms discovered.</p>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+
+    {% else %}
+
+        <!-- No documentation available -->
+        <div class="card shadow-sm">
+
+            <div class="card-body text-center py-5">
+
+                <i class="bi bi-database-x display-3 text-muted"></i>
+
+                <h4 class="mt-3">
+                    No Database Documentation Available
+                </h4>
+
+                <p class="text-muted mb-0">
+                    No completed database scan was found for this connection.
+                    Run a database scan to generate documentation.
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

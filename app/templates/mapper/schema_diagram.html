@@ -1,0 +1,101 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ schema_name }} Schema Diagram{% endblock %}
+
+{% block content %}
+
+<!-- Mermaid CSS -->
+<link rel="stylesheet"href="{{ url_for('static', filename='css/mapper/diagram.css') }}">
+
+<div class="container-fluid">
+
+    <!-- Page heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="mb-1">
+                {{ schema_name }} Schema
+            </h2>
+
+            <p class="text-muted mb-0">
+                Database: {{ database }}
+            </p>
+        </div>
+
+        <a href="{{ url_for(
+            'documentation.documentation',
+            connection_id=connection_id
+        ) }}" class="btn btn-outline-secondary">
+
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Documentation
+
+        </a>
+
+    </div>
+
+
+    <!-- Schema diagram -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-diagram-3 me-2"></i>
+                Entity Relationship Diagram
+            </h5>
+
+            <span class="badge bg-primary">
+                {{ schema_name }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            
+            <div class="diagram-toolbar mb-3">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-secondary" id="zoom-in">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="zoom-out">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="zoom-reset">
+                        <i class="fas fa-undo"></i> Reset
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" id="zoom-fit">
+                        <i class="fas fa-expand"></i> Fit
+                    </button>
+                </div>
+            
+                <span class="text-muted small ms-3" id="zoom-level">100%</span>
+            </div>
+
+            <div id="diagram-viewport">
+                <div id="diagram-stage">
+                    <div id="diagram-content">
+                        <pre class="mermaid">
+                            {{ diagram | safe }}
+                        </pre>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Mermaid JavaScript -->
+<script src="{{ url_for('static', filename='mermaid/js/mermaid.min.js') }}"></script>
+<!-- Style the Mermaid Diagram -->
+<script src="{{ url_for('static', filename='mermaid/js/style_mermaid.js') }}"></script>
+<!-- Script to handle zoom and scroll in mermaid diagrams -->
+<script src="{{ url_for('static', filename='js/mapper/diagram.js') }}"></script>
+
+
+{% endblock %}

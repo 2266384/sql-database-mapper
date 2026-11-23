@@ -1,0 +1,263 @@
+
+{% extends "base.html" %}
+
+{% block title %}Search Database Documentation{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="mb-4">
+        <h2>Search Database Documentation</h2>
+        <p class="text-muted mb-0">
+            Search schemas, tables, columns, views and database objects.
+        </p>
+    </div>
+
+    <!-- Search Form -->
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <form method="GET"
+                  action="{{ url_for('documentation.search') }}">
+
+                <!-- Database Connection -->
+                <div class="mb-3">
+
+                    <label for="connection_id" class="form-label">
+                        Database Connection
+                    </label>
+
+                    <select name="connection_id"
+                            id="connection_id"
+                            class="form-select"
+                            required>
+
+                        <option value="">Select a database</option>
+
+                        {% for connection in connections %}
+
+                            <option value="{{ connection.id }}"
+                                {% if connection_id == connection.id %}
+                                    selected
+                                {% endif %}>
+
+                                {{ connection.connection_name }}
+
+                            </option>
+
+                        {% endfor %}
+
+                    </select>
+
+                </div>
+
+                <!-- Search Input -->
+                <div class="mb-3">
+
+                    <label for="search" class="form-label">
+                        Search
+                    </label>
+
+                    <div class="input-group">
+
+                        <input type="text"
+                               name="q"
+                               id="search"
+                               class="form-control"
+                               placeholder="Search database objects..."
+                               value="{{ search_value }}"
+                               autofocus>
+
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fa-solid fa-magnifying-glass me-1"></i>
+                            Search
+                        </button>
+
+                        {% if search_value %}
+
+                            <a href="{{ url_for(
+                                'documentation.search',
+                                connection_id=connection_id
+                            ) }}"
+                               class="btn btn-outline-secondary">
+
+                                Clear
+
+                            </a>
+
+                        {% endif %}
+
+                    </div>
+
+                    <small class="text-muted d-block mt-2">
+                        Use * for multiple characters and ? for a single
+                        character. For example:
+                        <code>HumanResources.*</code>
+                    </small>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    {% if search_value and connection_id %}
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+
+            <h5 class="mb-0">
+                Search Results
+            </h5>
+
+            <span class="text-muted">
+                {{ results|length }}
+                result{{ '' if results|length == 1 else 's' }}
+            </span>
+
+        </div>
+
+        {% if results %}
+
+            <div class="list-group">
+
+                {% for result in results %}
+
+                    <div class="list-group-item">
+
+                        <div class="d-flex justify-content-between align-items-start">
+
+                            <div>
+
+                                {% set type_icons = {
+                                    'Schema': 'fa-database',
+                                    'Table': 'fa-table',
+                                    'Column': 'fa-columns',
+                                    'View': 'fa-eye',
+                                    'View Column': 'fa-columns',
+                                    'Stored Procedure': 'fa-code',
+                                    'Function': 'fa-square-root-variable',
+                                    'Trigger': 'fa-bolt',
+                                    'Parameter': 'fa-sliders'
+                                } %}
+
+                                <div class="mb-1">
+
+                                    <i class="fa-solid {{ type_icons.get(
+                                        result.type,
+                                        'fa-cube'
+                                    ) }} me-2 text-muted"></i>
+
+                                    <strong>{{ result.name }}</strong>
+
+                                </div>
+
+                                <div class="small text-muted">
+
+                                    <span>{{ result.type }}</span>
+
+                                    {% if result.schema %}
+
+                                        <span class="mx-1">·</span>
+                                        <span>Schema: {{ result.schema }}</span>
+
+                                    {% endif %}
+
+                                    {% if result.parent %}
+
+                                        <span class="mx-1">·</span>
+                                        <span>Parent: {{ result.parent }}</span>
+
+                                    {% endif %}
+
+                                </div>
+
+                                {% if result.qualified_name %}
+
+                                    <div class="small text-muted mt-1">
+                                        <code>{{ result.qualified_name }}</code>
+                                    </div>
+
+                                {% endif %}
+
+                            </div>
+
+                            <!-- Result Actions -->
+                            {% if result.table_id %}
+
+                                <a href="{{ url_for(
+                                    'documentation.view_table',
+                                    connection_id=connection_id,
+                                    table_name=result.table_id
+                                ) }}"
+                                   class="btn btn-sm btn-outline-primary">
+
+                                    View Table
+                                    <i class="fa-solid fa-arrow-right ms-1"></i>
+
+                                </a>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="card">
+
+                <div class="card-body text-center py-5">
+
+                    <i class="fa-solid fa-magnifying-glass fa-2x text-muted mb-3"></i>
+
+                    <h5>No results found</h5>
+
+                    <p class="text-muted mb-0">
+                        No database objects matched
+                        <strong>{{ search_value }}</strong>.
+                    </p>
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+    {% elif search_value and not connection_id %}
+
+        <div class="alert alert-info">
+            Please select a database connection before searching.
+        </div>
+
+    {% else %}
+
+        <div class="card">
+
+            <div class="card-body text-center py-5">
+
+                <i class="fa-solid fa-magnifying-glass fa-2x text-muted mb-3"></i>
+
+                <h5>Search your database</h5>
+
+                <p class="text-muted mb-0">
+                    Select a database connection and enter a search term
+                    to find database objects.
+                </p>
+
+            </div>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

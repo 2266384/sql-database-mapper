@@ -1,0 +1,294 @@
+
+/* =========================================
+   Dŵr Cymru Mermaid ER Diagram
+========================================= */
+
+:root {
+    --dwr-blue: #009EDB;
+    --dwr-dark-blue: #0072BC;
+    --dwr-green: #72BF44;
+
+    --diagram-background: #F4F8FA;
+    --diagram-border: #B8D5E2;
+
+    --diagram-row-even: #EAF5FA;
+    --diagram-row-odd: #FFFFFF;
+
+    --diagram-text: #263746;
+    --diagram-muted: #647987;
+    --diagram-line: #399BC1;
+}
+
+
+/* Hide Mermaid source while it is being rendered */
+#diagram-content .mermaid {
+    visibility: hidden;
+}
+
+/* Reveal the diagram once rendering is complete */
+#diagram-content .mermaid.rendered {
+    visibility: visible;
+}
+
+
+/* =========================================
+   Diagram viewport
+========================================= */
+
+#diagram-viewport {
+    background: var(--diagram-background);
+    border: 1px solid var(--diagram-border);
+    border-radius: 8px;
+
+    width: 100%;
+    height: 75vh;
+
+    overflow: auto;
+
+    position: relative;
+
+    cursor: grab;
+    user-select: none;
+
+}
+
+#diagram-stage {
+    position: relative;
+    width: max-content;
+    height: max-content;
+}
+
+
+#diagram-viewport:active {
+    cursor: grabbing;
+}
+
+
+#diagram-viewport svg {
+    user-select: none;
+}
+
+#diagram-content {
+    width: max-content;
+    transform-origin: top left;
+    will-change: transform;
+    padding: 35px;
+}
+
+/* =========================================
+   SVG
+========================================= */
+
+#diagram-content svg {
+    display: block;
+    max-width: none;
+    font-family: 'Nunito', sans-serif;
+}
+
+/* =========================================
+   Mermaid table dividers
+========================================= */
+
+#diagram-content .node.default .divider path {
+    stroke: var(--dwr-dark-blue) !important;
+    stroke-width: 1.3px !important;
+    fill: none !important;
+}
+
+/* =========================================
+   Entity / Table border
+========================================= */
+
+/* Entity background */
+#diagram-content .node.default .outer-path path:first-child {
+    fill: #FFFFFF !important;
+    stroke: none !important;
+}
+
+/* Entity outline */
+#diagram-content .node.default .outer-path path:nth-child(2) {
+    fill: none !important;
+    stroke: var(--dwr-dark-blue) !important;
+    stroke-width: 1.8px !important;
+    stroke-linejoin: round !important;
+}
+
+/* Header text */
+#diagram-content .node.default .label.name p {
+    color: #FFFFFF !important;
+    font-weight: 800 !important;
+    font-size: 14px !important;
+    margin: 0;
+}
+
+/* =========================================
+   Table header
+========================================= */
+
+#diagram-content .node.default .label.name foreignObject {
+    overflow: visible;
+}
+
+#diagram-content .node.default .label.name p {
+    color: #FFFFFF !important;
+    font-weight: 800;
+    font-size: 14px;
+    margin: 0;
+}
+
+/* =========================================
+   Attribute row banding
+========================================= */
+
+#diagram-content .node.default .row-rect-odd path:first-child {
+    fill: var(--diagram-row-odd) !important;
+}
+
+#diagram-content .node.default .row-rect-even path:first-child {
+    fill: var(--diagram-row-even) !important;
+}
+
+/* =========================================
+   Attribute row borders
+========================================= */
+
+#diagram-content .node.default .row-rect-odd path:nth-child(2),
+#diagram-content .node.default .row-rect-even path:nth-child(2) {
+    stroke: var(--dwr-dark-blue) !important;
+    stroke-width: 1.3px !important;
+    fill: none !important;
+    stroke-dasharray: none !important;
+}
+
+/* =========================================
+   Attribute text
+========================================= */
+
+#diagram-content .node.default .label.attribute-type p {
+    color: var(--diagram-muted) !important;
+    font-size: 11px;
+}
+
+#diagram-content .node.default .label.attribute-name p {
+    color: var(--diagram-text) !important;
+    font-weight: 600;
+    font-size: 12px;
+}
+
+#diagram-content .node.default .label.attribute-comment p {
+    color: var(--diagram-muted) !important;
+    font-size: 11px;
+}
+
+/* =========================================
+   Primary / Foreign / Unique Keys
+========================================= */
+
+#diagram-content .node.default .label.attribute-keys p {
+    font-weight: 800;
+    font-size: 11px;
+}
+
+/* =========================================
+   PK / FK / UK Badges
+========================================= */
+
+#diagram-content .attribute-keys foreignObject {
+    overflow: visible;
+}
+
+#diagram-content .attribute-keys p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 58px;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow: visible;
+    white-space: nowrap;
+}
+
+#diagram-content .key-badge-container {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 0;
+    gap: 4px;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    white-space: nowrap;
+    transform: none;
+}
+
+#diagram-content .key-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 23px;
+    width: 23px;
+    min-width: 23px;
+    height: 17px;
+    box-sizing: border-box;
+    padding: 1px 3px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 800;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Primary Key */
+#diagram-content .key-badge.pk {
+    color: #0072BC;
+    background: #E5F4FB;
+    border-color: #009EDB;
+}
+
+/* Foreign Key */
+#diagram-content .key-badge.fk {
+    color: #438C25;
+    background: #EDF7E8;
+    border-color: #72BF44;
+}
+
+/* Unique Key */
+#diagram-content .key-badge.uk {
+    color: #A66A00;
+    background: #FFF5DF;
+    border-color: #E69A24;
+}
+
+
+/* =========================================
+   Relationship connectors
+========================================= */
+
+#diagram-content .edgePath path {
+    stroke: var(--diagram-line) !important;
+    stroke-width: 1.8px !important;
+}
+
+#diagram-content .edgeLabel {
+    color: var(--dwr-dark-blue);
+    font-weight: 700;
+}
+
+/* =========================================
+   Toolbar
+========================================= */
+
+.diagram-toolbar .btn {
+    border-color: var(--diagram-border);
+    color: var(--dwr-dark-blue);
+}
+
+.diagram-toolbar .btn:hover {
+    background: var(--dwr-blue);
+    border-color: var(--dwr-blue);
+    color: #FFFFFF;
+}

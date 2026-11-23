@@ -1,32 +1,27 @@
-# Flask Web App Template
+# SQL Database Mapper
 
-A reusable starter template for building Flask web applications using a structured, layered project architecture.
-
-The template provides a clean starting point for new Flask projects while keeping application routes, business logic, database operations, models, schemas, and presentation concerns separated.
+A deployable web application that contains functions to scan and document the structure of one or more database schema.
 
 ## Features
 
-- Flask web application structure
-- SQLAlchemy model layer
-- Repository layer for database operations
-- Separate service layer for business logic
-- Dedicated route modules
-- Schemas for data validation
-- Jinja2 HTML templates
-- Static CSS, JavaScript and image assets
-- Environment variable configuration
-- Python virtual environment support
-- `requirements.txt` for dependency management
+- Store multiple database configuration details
+- Test database connection
+- Scan database schema and generate summary dashboard page
+- Produce interactive entity relationship diagram from scan
+
 
 ## Project Structure
 
 ```text
-flask_webapp_template/
+SQL Database Mapper/
 │
 ├── app/
 │   ├── __init__.py
 │   ├── config.py
 │   ├── extensions.py
+│   │
+│   ├── database/
+│   │   └── ...
 │   │
 │   ├── models/
 │   │   └── ...
@@ -40,6 +35,9 @@ flask_webapp_template/
 │   ├── schemas/
 │   │   └── ...
 │   │
+│   ├── security/
+│   │   └── ...
+│   │
 │   ├── services/
 │   │   └── ...
 │   │
@@ -48,11 +46,17 @@ flask_webapp_template/
 │   │   ├── images/
 │   │   └── js/
 │   │
+│   ├── tasks/
+│   │   └── ...
+│   │
 │   ├── templates/
 │   │   └── ...
 │   │
 │   └── utils/
 │       └── ...
+│
+├── dbscans/
+│   └── ...
 │
 ├── migrations/
 │   └── versions/
@@ -60,6 +64,7 @@ flask_webapp_template/
 │
 ├── .env.example
 ├── .gitignore
+├── make_celery.py
 ├── requirements.txt
 ├── run.py
 └── README.md
@@ -329,10 +334,34 @@ Then update `.env` with the configuration required for your application.
 The `.env.example` file should contain example values and variable names only.
 
 ## Running the Application
-Start the application using:
+Ensure Redis is running in the docker container and execute the following command to confirm:
 
 ```bash
-python run.py
+docker ps
+```
+
+You can confirm the connection to the Redis docker container with:
+```bash
+docker exec -it <container name> redis-cli ping
+```
+
+Expected response will be `PONG`
+
+
+Navigate to the folder and start the application using:
+
+```bash
+source .venv/bin/active
+flask run
+```
+
+You can include the optional parameter `--debug` when running the flask container if needed.
+
+Start the Celery worker in a second terminal:
+
+```bash
+source .venv/bin/activate
+celery -A make_celery:celery_app worker --pool=solo --concurrency=1 --loglevel=INFO
 ```
 
 The application will then be available through the local Flask development server.

@@ -1,2 +1,3 @@
 
-from .customer import Customer
+from .database_connection import DatabaseConnection
+from .scan import Scan

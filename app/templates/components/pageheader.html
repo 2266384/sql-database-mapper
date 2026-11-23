@@ -1,0 +1,74 @@
+
+<header>
+    <div class="container-fluid px-4">
+        <div class="d-flex align-items-center justify-content-between app-header-content">
+
+            <!-- Application branding -->
+            <div class="d-flex align-items-center gap-3">
+
+                <div class="app-logo">
+                    <i class="bi bi-database-fill-gear"></i>
+                </div>
+
+                <div>
+                    <h1 class="h5 mb-0 fw-semibold">
+                        {{ app_name }}
+                    </h1>
+
+                    <small class="text-white-50">
+                        Database discovery and documentation
+                    </small>
+                </div>
+
+            </div>
+
+            <!-- Header actions -->
+            <div class="d-flex align-items-center gap-3">
+
+                {% if database_status.connected %}
+                    <span class="badge bg-success">
+                        <i class="bi bi-check-circle me-1"></i>
+                        <!-- Database Connected -->
+                         {{ database_status.host }} - {{ database_status.database }}
+                    </span>
+                {% else %}
+                    <span class="badge bg-danger" title="{{ database_status.error }}">
+                        <i class="bi bi-x-circle me-1"></i>
+                        <!-- Database Disconnected -->
+                         {{ database_status.host }} - {{ database_status.database }}
+                    </span>
+                {% endif %}
+
+
+                <div class="dropdown">
+                    <button
+                        class="btn btn-outline-light btn-sm dropdown-toggle"
+                        type="button"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+
+                        <i class="bi bi-person-circle me-1"></i>
+                        Account
+
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                Settings
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                About
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</header>

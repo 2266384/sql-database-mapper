@@ -1,0 +1,756 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ table.name }} - Table Documentation{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Page heading -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="mb-1">
+                <i class="bi bi-table me-2"></i>
+                {{ table.name }}
+            </h2>
+
+            <p class="text-muted mb-0">
+                {{ table.schema }}.{{ table.name }}
+            </p>
+
+        </div>
+
+        <a href="{{ url_for(
+            'documentation.documentation',
+            connection_id=connection_id
+        ) }}"
+           class="btn btn-outline-secondary">
+
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Documentation
+
+        </a>
+
+    </div>
+
+
+    <!-- Table overview -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Table Overview
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-4 mb-3">
+
+                    <small class="text-muted d-block">
+                        Database
+                    </small>
+
+                    <strong>{{ database }}</strong>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <small class="text-muted d-block">
+                        Schema
+                    </small>
+
+                    <strong>{{ table.schema }}</strong>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <small class="text-muted d-block">
+                        Table Name
+                    </small>
+
+                    <strong>{{ table.name }}</strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Columns -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-list-columns me-2"></i>
+                Columns
+            </h5>
+
+            <span class="badge bg-secondary">
+                {{ table.columns|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if table.columns %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Column</th>
+                                <th>Data Type</th>
+                                <th>Nullable</th>
+                                <th>Default</th>
+                                <th>Identity</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for column in table.columns %}
+
+                                <tr>
+
+                                    <td class="fw-medium">
+
+                                        {{ column.name }}
+
+                                        {% if column.primary_key %}
+                                            <span class="badge bg-warning text-dark ms-1">
+                                                PK
+                                            </span>
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+                                        <code>{{ column.type }}</code>
+                                    </td>
+
+                                    <td>
+
+                                        {% if column.nullable %}
+                                            <span class="badge bg-success-subtle text-success">
+                                                Yes
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-secondary-subtle text-secondary">
+                                                No
+                                            </span>
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+                                        {{ (column.default | string)[1:-1] 
+                                            if column.default is not none and (column.default | string).startswith('(') and (column.default | string).endswith(')') 
+                                            else column.default 
+                                            if column.default is not none 
+                                            else '-' }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if column.autoincrement %}
+                                            <span class="badge bg-info-subtle text-info">
+                                                Yes
+                                            </span>
+                                        {% else %}
+                                            -
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No columns available.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Primary Key -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-key me-2"></i>
+                Primary Key
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            {% if table.primary_key %}
+
+                <div class="mb-2">
+
+                    <strong>
+                        {{ table.primary_key.name }}
+                    </strong>
+
+                </div>
+
+                {% if table.primary_key.columns %}
+
+                    <div class="d-flex flex-wrap gap-2">
+
+                        {% for column in table.primary_key.columns %}
+
+                            <span class="badge bg-warning text-dark">
+                                {{ column }}
+                            </span>
+
+                        {% endfor %}
+
+                    </div>
+
+                {% endif %}
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No primary key defined.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Foreign Keys -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-link-45deg me-2"></i>
+                Foreign Keys
+            </h5>
+
+            <span class="badge bg-secondary">
+                {{ table.foreign_keys|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if table.foreign_keys %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Constraint</th>
+                                <th>Columns</th>
+                                <th>Referenced Table</th>
+                                <th>Referenced Columns</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for fk in table.foreign_keys %}
+
+                                <tr>
+
+                                    <td class="fw-medium">
+                                        {{ fk.name }}
+                                    </td>
+
+                                    <td>
+                                        {{ fk.constrained_columns|default([], true)|join(', ') }}
+                                    </td>
+
+                                    <td>
+                                        {{ fk.referred_schema }}.{{ fk.referred_table }}
+                                    </td>
+
+                                    <td>
+                                        {{ fk.referred_columns|default([], true)|join(', ') }}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No foreign keys defined.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Indexes -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-list-ol me-2"></i>
+                Indexes
+            </h5>
+
+            <span class="badge bg-secondary">
+                {{ table.indexes|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if table.indexes %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Index</th>
+                                <th>Columns</th>
+                                <th>Unique</th>
+                                <th>Type</th>
+                                <th>Clustered</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for index in table.indexes %}
+
+                                <tr>
+
+                                    <td class="fw-medium">
+                                        {{ index.name }}
+                                    </td>
+
+                                    <td>
+                                        {{ index.columns|default([], true)|join(', ') }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if index.unique %}
+                                            <span class="badge bg-info">
+                                                Unique
+                                            </span>
+                                        {% else %}
+                                            No
+                                        {% endif %}
+
+                                    </td>
+
+                                    <td>
+                                        {{ index.type or '-' }}
+                                    </td>
+
+                                    <td>
+
+                                        {% if index.dialect_options is defined
+                                              and index.dialect_options.mssql_clustered is defined %}
+
+                                            {{ 'Yes' if index.dialect_options.mssql_clustered else 'No' }}
+
+                                        {% else %}
+
+                                            -
+
+                                        {% endif %}
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No indexes defined.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Unique Constraints -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-shield-check me-2"></i>
+                Unique Constraints
+            </h5>
+
+            <span class="badge bg-secondary">
+                {{ table.unique_constraints|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if table.unique_constraints %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-hover mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Constraint</th>
+                                <th>Columns</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for constraint in table.unique_constraints %}
+
+                                <tr>
+
+                                    <td class="fw-medium">
+                                        {{ constraint.name }}
+                                    </td>
+
+                                    <td>
+                                        {{ constraint.columns|default([], true)|join(', ') }}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No unique constraints defined.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Check Constraints -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-check-circle me-2"></i>
+                Check Constraints
+            </h5>
+
+            <span class="badge bg-secondary">
+                {{ table.check_constraints|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if table.check_constraints %}
+
+                {% for constraint in table.check_constraints %}
+
+                    <div class="border rounded p-3 mb-2">
+
+                        <strong>
+                            {{ constraint.name }}
+                        </strong>
+
+                        {% if constraint.sqltext %}
+
+                            <pre class="bg-light border rounded p-3 mt-2 mb-0 small"><code>{{ constraint.sqltext }}</code></pre>
+
+                        {% endif %}
+
+                    </div>
+
+                {% endfor %}
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No check constraints defined.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Outgoing Relationships -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-arrow-up-right-circle me-2"></i>
+                Outgoing Relationships
+            </h5>
+
+            <span class="badge bg-secondary">
+                {{ outgoing_relationships|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if outgoing_relationships %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Referenced Table</th>
+                                <th>Source Columns</th>
+                                <th>Referenced Columns</th>
+                                <th>Foreign Key</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for relationship in outgoing_relationships %}
+
+                                <tr>
+
+                                    <td class="fw-medium">
+
+                                        <i class="bi bi-table text-muted me-1"></i>
+
+                                        {{ relationship.target }}
+
+                                    </td>
+
+                                    <td>
+                                        {{ relationship.columns|join(', ') }}
+                                    </td>
+
+                                    <td>
+                                        {{ relationship.referenced_columns|join(', ') }}
+                                    </td>
+
+                                    <td>
+                                        <small>{{ relationship.foreign_key }}</small>
+                                    </td>
+
+                                    <td class="text-end">
+
+                                        <a href="{{ url_for(
+                                            'documentation.view_table',
+                                            connection_id=connection_id,
+                                            table_name=relationship.target
+                                        ) }}"
+                                           class="btn btn-outline-primary btn-sm">
+
+                                            <i class="bi bi-eye me-1"></i>
+                                            View Table
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    This table does not reference any other tables.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+    <!-- Incoming Relationships -->
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+                <i class="bi bi-arrow-down-left-circle me-2"></i>
+                Incoming Relationships
+            </h5>
+
+            <span class="badge bg-secondary">
+                {{ incoming_relationships|length }}
+            </span>
+
+        </div>
+
+        <div class="card-body">
+
+            {% if incoming_relationships %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm table-hover align-middle mb-0">
+
+                        <thead class="table-light">
+                            <tr>
+                                <th>Referencing Table</th>
+                                <th>Source Columns</th>
+                                <th>Referenced Columns</th>
+                                <th>Foreign Key</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for relationship in incoming_relationships %}
+
+                                <tr>
+
+                                    <td class="fw-medium">
+
+                                        <i class="bi bi-table text-muted me-1"></i>
+
+                                        {{ relationship.source }}
+
+                                    </td>
+
+                                    <td>
+                                        {{ relationship.columns|join(', ') }}
+                                    </td>
+
+                                    <td>
+                                        {{ relationship.referenced_columns|join(', ') }}
+                                    </td>
+
+                                    <td>
+                                        <small>{{ relationship.foreign_key }}</small>
+                                    </td>
+
+                                    <td class="text-end">
+
+                                        <a href="{{ url_for(
+                                            'documentation.view_table',
+                                            connection_id=connection_id,
+                                            table_name=relationship.source
+                                        ) }}"
+                                           class="btn btn-outline-primary btn-sm">
+
+                                            <i class="bi bi-eye me-1"></i>
+                                            View Table
+
+                                        </a>
+
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            {% else %}
+
+                <p class="text-muted mb-0">
+                    No other tables reference this table.
+                </p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+
+
+
+</div>
+
+{% endblock %}

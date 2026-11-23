@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if connection %}
+        Edit Database Connection
+    {% else %}
+        Add Database Connection
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>
+                {% if connection %}
+                    Edit Database Connection
+                {% else %}
+                    Add Database Connection
+                {% endif %}
+            </h2>
+            <p class="text-muted mb-0">
+                Configure a connection to a SQL Server database.
+            </p>
+        </div>
+
+        <a href="{{ url_for('connections.connections') }}"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Back to Connections
+        </a>
+    </div>
+
+    <!-- Connection Form -->
+    <div class="card shadow-sm">
+        <div class="card-header">
+            <h5 class="mb-0">Connection Details</h5>
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST"
+                  action="{% if connection %}
+                              {{ url_for('connections.edit_connection', connection_id=connection.id) }}
+                          {% else %}
+                              {{ url_for('connections.create_connection') }}
+                          {% endif %}">
+
+                {# Include this if Flask-WTF CSRF protection is enabled #}
+                {# {{ form.csrf_token }} #}
+
+                <div class="row">
+
+                    <!-- Connection Name -->
+                    <div class="col-md-6 mb-3">
+                        <label for="connection_name" class="form-label">
+                            Connection Name
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               id="connection_name"
+                               name="connection_name"
+                               value="{{ request.form.get('connection_name', connection.connection_name if connection else '') }}"
+                               placeholder="e.g. Development Database"
+                               maxlength="100"
+                               required>
+
+                        <div class="form-text">
+                            A friendly name to identify this connection.
+                        </div>
+                    </div>
+
+                    <!-- Server -->
+                    <div class="col-md-6 mb-3">
+                        <label for="server" class="form-label">
+                            SQL Server
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               id="server"
+                               name="server"
+                               value="{{ request.form.get('server', connection.server if connection else '') }}"
+                               placeholder="e.g. localhost or server01"
+                               maxlength="255"
+                               required>
+
+                        <div class="form-text">
+                            Server hostname or IP address. Include the port if required.
+                        </div>
+                    </div>
+
+                    <!-- Port -->
+                    <div class="mb-3">
+                        <label for="port" class="form-label">Port</label>
+
+                        <input
+                            type="number"
+                            class="form-control"
+                            id="port"
+                            name="port"
+                            value="{{ connection.port if connection else 1433 }}"
+                            min="1"
+                            max="65535"
+                            required
+                        >
+
+                        <div class="form-text">
+                            Default SQL Server port is 1433.
+                        </div>
+                    </div>
+
+
+
+                    <!-- Database -->
+                    <div class="col-md-6 mb-3">
+                        <label for="database" class="form-label">
+                            Database Name
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <input type="text"
+                               class="form-control"
+                               id="database"
+                               name="database"
+                               value="{{ request.form.get('database', connection.database if connection else '') }}"
+                               placeholder="e.g. MyDatabase"
+                               maxlength="255"
+                               required>
+                    </div>
+
+                    <!-- Authentication Type -->
+                    <div class="col-md-6 mb-3">
+                        <label for="authentication_type" class="form-label">
+                            Authentication Type
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        {% set selected_auth = request.form.get(
+                            'authentication_type',
+                            connection.authentication_type if connection else 'SQL'
+                        ) %}
+
+                        <select class="form-select"
+                                id="authentication_type"
+                                name="authentication_type"
+                                required>
+
+                            <option value="SQL"
+                                {% if selected_auth == 'SQL' %}selected{% endif %}>
+                                SQL Server Authentication
+                            </option>
+
+                            <option value="WINDOWS"
+                                {% if selected_auth == 'WINDOWS' %}selected{% endif %}>
+                                Windows Authentication
+                            </option>
+
+                        </select>
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <!-- Form Actions -->
+                <div class="d-flex justify-content-end gap-2">
+
+                    <a href="{{ url_for('connections.connections') }}"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save me-1"></i>
+
+                        {% if connection %}
+                            Update Connection
+                        {% else %}
+                            Save Connection
+                        {% endif %}
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

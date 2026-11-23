@@ -1,41 +1,45 @@
 import os
-from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
+from app.database.connection_factory import ConnectionFactory
 
 load_dotenv()
 
-### Private function to build the database connection string
-def _build_database_uri() -> str:
-    host = os.environ["DB_HOST"]
-    port = os.environ.get("DB_PORT", "1433")
-    database = os.environ["DB_NAME"]
-    username = os.environ["DB_USER"]
-    password = os.environ["DB_PASSWORD"]
-    driver = os.environ.get(
-        "DB_DRIVER",
-        "ODBC Driver 18 for SQL Server"
-    )
-    encrypt = os.environ.get(
-        "DB_ENCRYPT",
-        "no"
-    )
-    trust_certificate = os.environ.get(
-        "DB_TRUST_SERVER_CERTIFICATE",
-        "no"
+
+def _build_database_uri():
+
+    connection_url = ConnectionFactory.build_sql_server_url(
+        server=os.environ["DB_HOST"],
+        port=os.getenv("DB_PORT", "1433"),
+        database=os.environ["DB_NAME"],
+        authentication_type="SQL",
+        username=os.environ["DB_USER"],
+        password=os.environ["DB_PASSWORD"]
     )
 
-    return (
-        f"mssql+pyodbc://"
-        f"{quote_plus(username)}:"
-        f"{quote_plus(password)}@"
-        f"{host}:{port}/"
-        f"{database}"
-        f"?driver={quote_plus(driver)}"
-        f"&Encrypt={encrypt}"
-        f"&TrustServerCertificate={trust_certificate}"
-    )
+    return connection_url.render_as_string(hide_password=False)
 
+
+# Variables used by the app
 class Config:
+    APP_NAME = "DB Tools"
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_NAME = os.getenv("DB_NAME")
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_DATABASE_URI = _build_database_uri()
+
+    SECRET_KEY = os.environ.get("SECRET_KEY")
+
+    # Celery settings
+    CELERY_BROKER_URL = os.getenv(
+        "CELERY_BROKER_URL",
+        "redis://localhost:6379/0"
+    )
+
+    CELERY_RESULT_BACKEND = os.getenv(
+        "CELERY_RESULT_BACKEND",
+        "redis://localhost:6379/1"
+    )
+
+    CREDENTIAL_ENCRYPTION_KEY = os.environ["CREDENTIAL_ENCRYPTION_KEY"]

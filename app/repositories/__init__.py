@@ -1,2 +1,5 @@
 
-from .customer_repository import Customer_Repository
+#from .customer_repository import Customer_Repository
+from .connections_repository import ConnectionsRepository
+from .scans_repository import ScansRepository
+from .connection_test_repository import ConnectionTestRepository

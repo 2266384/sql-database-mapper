@@ -1,0 +1,140 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>Database Documentation</h2>
+            <p class="text-muted mb-0">
+                Browse the structure and relationships of your connected databases.
+            </p>
+        </div>
+    </div>
+
+    {% if documentation_items %}
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+                            <tr>
+                                <th>Connection</th>
+                                <th>Server</th>
+                                <th>Database</th>
+                                <th>Last Scan</th>
+                                <th>Schemas</th>
+                                <th>Tables</th>
+                                <th>Relationships</th>
+                                <th>Documentation</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for item in documentation_items %}
+
+                                {% set connection = item.connection %}
+                                {% set scan = item.latest_scan %}
+                                {% set summary = item.summary %}
+
+                                <tr>
+
+                                    <td>
+                                        <strong>
+                                            {{ connection.connection_name }}
+                                        </strong>
+                                    </td>
+
+                                    <td>{{ connection.server }}</td>
+
+                                    <td>{{ connection.database }}</td>
+
+                                    <td>
+                                        {% if scan %}
+                                            {{ scan.completed_at.strftime('%d/%m/%Y %H:%M') if scan.completed_at else 'Completed' }}
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                No completed scan
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {{ summary.schema_count if summary else '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ summary.table_count if summary else '-' }}
+                                    </td>
+
+                                    <td>
+                                        {{ summary.relationship_count if summary else '-' }}
+                                    </td>
+
+                                    <td>
+                                        {% if summary %}
+                                            <a href="{{ url_for(
+                                                'documentation.documentation',
+                                                connection_id=connection.id
+                                            ) }}"
+                                            class="btn btn-sm btn-primary">
+                                                <i class="bi bi-journal-text me-1"></i>
+                                                View
+                                            </a>
+                                        {% elif scan %}
+                                            <span class="text-warning">
+                                                Scan output unavailable
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">
+                                                Not available
+                                            </span>
+                                        {% endif %}
+                                    </td>
+
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+                </div>
+
+            </div>
+        </div>
+
+    {% else %}
+
+        <div class="card shadow-sm">
+            <div class="card-body text-center py-5">
+
+                <i class="bi bi-database display-4 text-muted"></i>
+
+                <h5 class="mt-3">No database connections found</h5>
+
+                <p class="text-muted">
+                    Add a database connection and complete a scan
+                    to generate documentation.
+                </p>
+
+                <a href="{{ url_for('connections.create_connection') }}"
+                   class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i>
+                    Add Database Connection
+                </a>
+
+            </div>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}
