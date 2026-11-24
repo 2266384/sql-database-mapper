@@ -515,3 +515,4 @@ Flask does not enforce a particular application layout, allowing developers to c
 This template deliberately separates the major application responsibilities so that a project can grow without placing everything into a single app.py file.
 
 The objective is to provide a consistent starting point for new Flask applications while keeping the architecture understandable and easy to extend.
+
